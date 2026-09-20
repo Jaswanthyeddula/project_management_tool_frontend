@@ -1,6 +1,6 @@
 import axios from "axios";
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || "https://project-management-tool-backend-v3-264n.onrender.com/api",
+    baseURL: import.meta.env.VITE_API_URL || "https://project-management-tool-backend-i5vi.onrender.com/api",
     withCredentials: false,
 });
 api.interceptors.request.use(
