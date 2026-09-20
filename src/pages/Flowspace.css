@@ -1,0 +1,236 @@
+/* Flowspace Modern Enterprise Design System */
+
+.flowspace-shell {
+  --flow-bg: #f8fafc;
+  --flow-panel: #ffffff;
+  --flow-panel-hover: #ffffff;
+  --flow-ink: #0f172a;
+  --flow-ink-secondary: #334155;
+  --flow-muted: #64748b;
+  --flow-line: #e2e8f0;
+  --flow-line-subtle: #f1f5f9;
+
+  --flow-accent: #4f46e5;
+  --flow-accent-hover: #4338ca;
+  --flow-accent-soft: #eef2ff;
+  --flow-accent-border: #c7d2fe;
+
+  --flow-sidebar-bg: #ffffff;
+  --flow-sidebar-border: #e2e8f0;
+  --flow-sidebar-text: #475569;
+  --flow-sidebar-active: #eef2ff;
+  --flow-sidebar-active-text: #4f46e5;
+
+  background: var(--flow-bg);
+  color: var(--flow-ink);
+  letter-spacing: -0.01em;
+}
+
+/* Dark Mode Tokens */
+.flowspace-shell.dark-theme,
+.flowspace-shell.dark,
+.dark .flowspace-shell {
+  --flow-bg: #090d16;
+  --flow-panel: #111827;
+  --flow-panel-hover: #162032;
+  --flow-ink: #f8fafc;
+  --flow-ink-secondary: #cbd5e1;
+  --flow-muted: #94a3b8;
+  --flow-line: #1e293b;
+  --flow-line-subtle: #1e293b;
+
+  --flow-accent: #6366f1;
+  --flow-accent-hover: #818cf8;
+  --flow-accent-soft: rgba(99, 102, 241, 0.14);
+  --flow-accent-border: rgba(99, 102, 241, 0.35);
+
+  --flow-sidebar-bg: #0b0f19;
+  --flow-sidebar-border: #1e293b;
+  --flow-sidebar-text: #94a3b8;
+  --flow-sidebar-active: rgba(99, 102, 241, 0.14);
+  --flow-sidebar-active-text: #818cf8;
+}
+
+/* Sidebar styling */
+.flowspace-shell aside {
+  width: 250px;
+  background: var(--flow-sidebar-bg);
+  border-right: 1px solid var(--flow-sidebar-border);
+  transition: width 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+
+.flowspace-shell aside > div:first-child {
+  height: 68px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--flow-sidebar-border);
+}
+
+.flowspace-shell nav {
+  padding: 16px 12px;
+}
+
+.flowspace-shell nav button {
+  min-height: 42px;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flowspace-shell nav button:hover {
+  transform: translateX(2px);
+}
+
+/* Header */
+.flowspace-shell > div > header {
+  height: 64px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid var(--flow-line);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: background 0.25s ease, border-color 0.25s ease;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.flowspace-shell.dark-theme > div > header,
+.flowspace-shell.dark > div > header,
+.dark .flowspace-shell > div > header {
+  background: rgba(11, 15, 25, 0.95);
+  border-bottom: 1px solid var(--flow-line);
+}
+
+/* Main Container & Spacing */
+.flowspace-shell main {
+  padding: 24px 28px 48px;
+  background: var(--flow-bg);
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.flowspace-shell main > div {
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
+}
+
+.flowspace-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px !important;
+}
+
+/* Crisp SaaS grid spacing */
+.flowspace-shell main .grid {
+  gap: 16px !important;
+}
+
+.flowspace-shell main .grid > * {
+  min-width: 0;
+}
+
+/* Cards Elevation & Styling */
+.flowspace-shell .flow-card {
+  background: var(--flow-panel);
+  border: 1px solid var(--flow-line);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 6px 18px -3px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.flowspace-shell .flow-card:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.07);
+}
+
+.flowspace-shell.dark-theme .flow-card,
+.flowspace-shell.dark .flow-card,
+.dark .flowspace-shell .flow-card {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+}
+
+.flowspace-shell.dark-theme .flow-card:hover,
+.flowspace-shell.dark .flow-card:hover,
+.dark .flowspace-shell .flow-card:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+}
+
+/* Table Enhancements & Spacing Guarantee */
+.flowspace-shell table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.flowspace-shell table th {
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 14px 20px;
+}
+
+.flowspace-shell table td {
+  white-space: nowrap;
+  padding: 16px 20px;
+  font-size: 13px;
+}
+
+.flowspace-shell table td:first-child,
+.flowspace-shell table th:first-child {
+  padding-left: 24px;
+}
+
+.flowspace-shell table td:last-child,
+.flowspace-shell table th:last-child {
+  padding-right: 24px;
+}
+
+/* Form Controls */
+.flowspace-shell input:focus,
+.flowspace-shell textarea:focus,
+.flowspace-shell select:focus {
+  border-color: var(--flow-accent) !important;
+  box-shadow: 0 0 0 3px var(--flow-accent-soft) !important;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 1200px) {
+  .flowspace-shell main .grid-cols-4,
+  .flowspace-shell main .xl\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 960px) {
+  .flowspace-shell main .grid-cols-3,
+  .flowspace-shell main .lg\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .flowspace-shell main .col-span-2,
+  .flowspace-shell main .col-span-1,
+  .flowspace-shell main .lg\:col-span-2,
+  .flowspace-shell main .lg\:col-span-1 {
+    grid-column: span 1 / span 1 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .flowspace-shell main {
+    padding: 16px;
+  }
+  .flowspace-shell main .grid-cols-4,
+  .flowspace-shell main .grid-cols-2,
+  .flowspace-shell main .xl\:grid-cols-4,
+  .flowspace-shell main .sm\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
