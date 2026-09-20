@@ -21,9 +21,13 @@ export function AuthProvider({ children }) {
                 const userData = response?.data?.user || response?.data || null;
                 setUser(userData);
             } catch (error) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("refreshToken");
-                setUser(null);
+                // Only clear token if server explicitly rejected auth (401 or 403),
+                // not on temporary network timeout or server wake-up delay
+                if (error?.response?.status === 401 || error?.response?.status === 403) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("refreshToken");
+                    setUser(null);
+                }
             } finally {
                 setLoading(false);
             }

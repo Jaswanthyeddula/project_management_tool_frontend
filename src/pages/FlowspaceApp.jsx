@@ -2830,9 +2830,52 @@ export default function FlowspaceApp({ initialAuthView }) {
     }
   };
 
-  // Backend state
-  const [projectsList, setProjectsList] = useState([]);
-  const [activeProjectId, setActiveProjectId] = useState(null);
+  // Default fallback workspaces
+  const DEFAULT_WORKSPACES = [
+    { id: "w-1", name: "Engineering", projects: 0, members: 1, color: ACCENT },
+    { id: "w-2", name: "Product & Design", projects: 0, members: 1, color: "#2563EB" },
+    { id: "w-3", name: "Marketing", projects: 0, members: 1, color: "#DB2777" },
+  ];
+
+  const getProjectWorkspaceMap = () => {
+    try {
+      return JSON.parse(localStorage.getItem("flowspace_project_workspaces") || "{}");
+    } catch {
+      return {};
+    }
+  };
+
+  const setProjectWorkspaceMapping = (projectId, workspaceName) => {
+    try {
+      const map = getProjectWorkspaceMap();
+      map[projectId] = workspaceName;
+      localStorage.setItem("flowspace_project_workspaces", JSON.stringify(map));
+    } catch {}
+  };
+
+  // Backend state with localStorage persistence fallbacks
+  const [projectsList, setProjectsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem("flowspace_projects");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+
+  const [activeProjectId, setActiveProjectId] = useState(() => {
+    try {
+      const saved = localStorage.getItem("flowspace_active_project_id");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed) return parsed;
+      }
+    } catch {}
+    return null;
+  });
+
   const [boards, setBoards] = useState([]);
   const [activeBoardId, setActiveBoardId] = useState(null);
   const [columns, setColumns] = useState(EMPTY_COLUMNS);
@@ -2845,8 +2888,17 @@ export default function FlowspaceApp({ initialAuthView }) {
   const [workspaceModalOpen, setWorkspaceModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
-  // Workspaces state
-  const [workspacesList, setWorkspacesList] = useState([]);
+  // Workspaces state with localStorage persistence
+  const [workspacesList, setWorkspacesList] = useState(() => {
+    try {
+      const saved = localStorage.getItem("flowspace_workspaces");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_WORKSPACES;
+  });
   const [workspaceForm, setWorkspaceForm] = useState({ name: "", color: ACCENT });
   const [selectedWorkspaceFilter, setSelectedWorkspaceFilter] = useState(null);
 
@@ -2868,65 +2920,144 @@ export default function FlowspaceApp({ initialAuthView }) {
     localStorage.setItem("flowspace_theme", dark ? "dark" : "light");
   }, [dark]);
 
-  // Load Projects from Backend
+  // Auto-sync workspacesList to localStorage
+  useEffect(() => {
+    if (workspacesList.length > 0) {
+      try {
+        localStorage.setItem("flowspace_workspaces", JSON.stringify(workspacesList));
+      } catch {}
+    }
+  }, [workspacesList]);
+
+  // Auto-sync projectsList to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("flowspace_projects", JSON.stringify(projectsList));
+    } catch {}
+  }, [projectsList]);
+
+  // Auto-sync activeProjectId to localStorage
+  useEffect(() => {
+    if (activeProjectId) {
+      try {
+        localStorage.setItem("flowspace_active_project_id", JSON.stringify(activeProjectId));
+      } catch {}
+    }
+  }, [activeProjectId]);
+
+  // Auto-sync boards to localStorage
+  useEffect(() => {
+    if (activeProjectId && boards.length > 0) {
+      try {
+        localStorage.setItem(`flowspace_boards_${activeProjectId}`, JSON.stringify(boards));
+      } catch {}
+    }
+  }, [boards, activeProjectId]);
+
+  // Auto-sync tasks/columns to localStorage
+  useEffect(() => {
+    if (activeBoardId && columns && columns !== EMPTY_COLUMNS) {
+      try {
+        localStorage.setItem(`flowspace_tasks_${activeBoardId}`, JSON.stringify(columns));
+      } catch {}
+    }
+  }, [columns, activeBoardId]);
+
+  // Load Projects from Backend & seamlessly merge with local state
   useEffect(() => {
     async function loadProjects() {
       try {
         const res = await projectApi.list().catch(() => null);
+        const wsMap = getProjectWorkspaceMap();
+
         if (res && Array.isArray(res) && res.length > 0) {
           const mapped = res.map(p => ({
             id: p.id,
             name: p.name,
             description: p.description || "",
-            workspace: p.workspace || "General",
+            workspace: wsMap[p.id] || p.workspace || "General",
             members: [currentUser?.name || "User"],
             status: p.status || "In Progress",
             progress: p.progress || 0,
             due: p.due_date ? String(p.due_date).slice(0, 10) : "Upcoming"
           }));
-          setProjectsList(mapped);
-          setActiveProjectId(mapped[0].id);
 
-          const wsNames = [...new Set(mapped.map(p => p.workspace).filter(Boolean))];
-          if (wsNames.length > 0) {
-            setWorkspacesList(wsNames.map((name, idx) => ({
-              id: `w-${idx + 1}`,
-              name,
-              projects: mapped.filter(p => p.workspace === name).length,
-              members: 1,
-              color: [ACCENT, "#F59E0B", "#2563EB", "#DB2777"][idx % 4]
-            })));
+          setProjectsList(mapped);
+          setActiveProjectId(prev => (prev && mapped.some(p => p.id === prev) ? prev : mapped[0].id));
+
+          // Ensure all project workspaces appear in workspacesList
+          const projectWsNames = [...new Set(mapped.map(p => p.workspace).filter(Boolean))];
+          setWorkspacesList(prev => {
+            const existingNames = new Set(prev.map(w => w.name));
+            const toAdd = projectWsNames
+              .filter(name => !existingNames.has(name))
+              .map((name, idx) => ({
+                id: `w-${Date.now()}-${idx}`,
+                name,
+                projects: mapped.filter(p => p.workspace === name).length,
+                members: 1,
+                color: [ACCENT, "#F59E0B", "#2563EB", "#DB2777"][(prev.length + idx) % 4]
+              }));
+            return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+          });
+        } else if (res === null) {
+          // Backend was unreachable or wake-up delay; retain current/local projects without wiping
+          console.warn("Backend unavailable or wake-up delay, preserving local projects.");
+        } else if (Array.isArray(res) && res.length === 0) {
+          // Check if we have local unsynced projects before clearing
+          const saved = localStorage.getItem("flowspace_projects");
+          if (saved) {
+            try {
+              const localProjects = JSON.parse(saved);
+              if (localProjects.length > 0) {
+                setProjectsList(localProjects);
+                setActiveProjectId(prev => (prev && localProjects.some(p => p.id === prev) ? prev : localProjects[0].id));
+                return;
+              }
+            } catch {}
           }
-        } else {
           setProjectsList([]);
           setActiveProjectId(null);
         }
       } catch (err) {
         console.warn("Project sync note:", err.message);
-        setProjectsList([]);
-        setActiveProjectId(null);
       }
     }
     loadProjects();
-  }, []);
+  }, [currentUser?.name]);
 
   // Load Boards when active project changes
   useEffect(() => {
-    if (!activeProjectId) return;
+    if (!activeProjectId) {
+      setBoards([]);
+      setActiveBoardId(null);
+      return;
+    }
+
+    // Immediately restore cached boards if available for instant display
+    try {
+      const saved = JSON.parse(localStorage.getItem(`flowspace_boards_${activeProjectId}`) || "[]");
+      if (saved.length > 0) {
+        setBoards(saved);
+        setActiveBoardId(prev => (prev && saved.some(b => b.id === prev) ? prev : saved[0].id));
+      }
+    } catch {}
+
     async function loadBoards() {
       try {
         const res = await boardApi.list(activeProjectId).catch(() => null);
         if (res && Array.isArray(res) && res.length > 0) {
           setBoards(res);
-          setActiveBoardId(res[0].id);
-        } else {
-          setBoards([]);
-          setActiveBoardId(null);
+          setActiveBoardId(prev => (prev && res.some(b => b.id === prev) ? prev : res[0].id));
+        } else if (res && Array.isArray(res) && res.length === 0) {
+          // If project has no board on backend, auto-create a default board so tasks can be added
+          const created = await boardApi.create(activeProjectId, "Main Board", "Sprint board").catch(() => null);
+          const newB = created?.id ? created : { id: `b-${activeProjectId}`, name: "Main Board", description: "Sprint board" };
+          setBoards([newB]);
+          setActiveBoardId(newB.id);
         }
       } catch (err) {
         console.warn("Boards sync note:", err.message);
-        setBoards([]);
-        setActiveBoardId(null);
       }
     }
     loadBoards();
@@ -2938,6 +3069,18 @@ export default function FlowspaceApp({ initialAuthView }) {
       setColumns(EMPTY_COLUMNS);
       return;
     }
+
+    // Immediately restore cached tasks for instant render on refresh
+    try {
+      const savedTasks = localStorage.getItem(`flowspace_tasks_${activeBoardId}`);
+      if (savedTasks) {
+        const parsed = JSON.parse(savedTasks);
+        if (parsed && typeof parsed === "object") {
+          setColumns(parsed);
+        }
+      }
+    } catch {}
+
     async function loadTasks() {
       try {
         const res = await taskApi.list(activeBoardId).catch(() => null);
@@ -2966,16 +3109,13 @@ export default function FlowspaceApp({ initialAuthView }) {
             });
           });
           setColumns(newCols);
-        } else {
-          setColumns(EMPTY_COLUMNS);
         }
       } catch (err) {
         console.warn("Tasks sync note:", err.message);
-        setColumns(EMPTY_COLUMNS);
       }
     }
     loadTasks();
-  }, [activeBoardId]);
+  }, [activeBoardId, currentUser?.name]);
 
   // Load Team Members when active project changes
   useEffect(() => {
@@ -3022,19 +3162,34 @@ export default function FlowspaceApp({ initialAuthView }) {
     e.preventDefault();
     if (!projectForm.name.trim()) return;
     setSubmitting(true);
+    const chosenWorkspace = selectedWorkspaceFilter || "General";
     try {
       const created = await projectApi.create(projectForm.name, projectForm.description).catch(() => null);
+      const projectId = created?.id || Date.now();
+      setProjectWorkspaceMapping(projectId, chosenWorkspace);
+
       const newP = {
-        id: created?.id || Date.now(),
+        id: projectId,
         name: projectForm.name,
-        workspace: selectedWorkspaceFilter || "General",
+        description: projectForm.description || "",
+        workspace: chosenWorkspace,
         members: [currentUser?.name || "User"],
         status: "In Progress",
         progress: 0,
         due: "Upcoming"
       };
+
       setProjectsList(prev => [newP, ...prev]);
       setActiveProjectId(newP.id);
+
+      // Auto-create default board for the newly created project
+      try {
+        const createdBoard = await boardApi.create(projectId, "Main Board", "Sprint board").catch(() => null);
+        const newB = createdBoard?.id ? createdBoard : { id: `b-${projectId}`, name: "Main Board", description: "Sprint board" };
+        setBoards([newB]);
+        setActiveBoardId(newB.id);
+      } catch {}
+
       setProjectModalOpen(false);
       setProjectForm({ name: "", description: "" });
       showToast(`Project "${newP.name}" created!`);
@@ -3047,7 +3202,10 @@ export default function FlowspaceApp({ initialAuthView }) {
 
   // Handle Delete Project
   const handleDeleteProject = async (projectId) => {
-    setProjectsList(prev => prev.filter(p => p.id !== projectId));
+    setProjectsList(prev => {
+      const updated = prev.filter(p => p.id !== projectId);
+      return updated;
+    });
     if (activeProjectId === projectId) {
       const remaining = projectsList.filter(p => p.id !== projectId);
       if (remaining.length > 0) setActiveProjectId(remaining[0].id);
@@ -3072,6 +3230,7 @@ export default function FlowspaceApp({ initialAuthView }) {
       color: workspaceForm.color || ACCENT
     };
     setWorkspacesList(prev => [...prev, newW]);
+    setSelectedWorkspaceFilter(newW.name);
     setWorkspaceModalOpen(false);
     setWorkspaceForm({ name: "", color: ACCENT });
     showToast(`Workspace "${newW.name}" created!`);
