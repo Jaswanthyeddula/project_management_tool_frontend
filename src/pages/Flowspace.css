@@ -10,10 +10,10 @@
   --flow-line: #e2e8f0;
   --flow-line-subtle: #f1f5f9;
 
-  --flow-accent: #4f46e5;
-  --flow-accent-hover: #4338ca;
-  --flow-accent-soft: #eef2ff;
-  --flow-accent-border: #c7d2fe;
+  --flow-accent: #0d9488; /* teal-600 */
+  --flow-accent-hover: #0f766e; /* teal-700 */
+  --flow-accent-soft: #ccfbf1; /* teal-100 */
+  --flow-accent-border: #5eead4; /* teal-300 */
 
   --flow-sidebar-bg: #ffffff;
   --flow-sidebar-border: #e2e8f0;
@@ -39,10 +39,10 @@
   --flow-line: #1e293b;
   --flow-line-subtle: #1e293b;
 
-  --flow-accent: #6366f1;
-  --flow-accent-hover: #818cf8;
-  --flow-accent-soft: rgba(99, 102, 241, 0.14);
-  --flow-accent-border: rgba(99, 102, 241, 0.35);
+  --flow-accent: #14b8a6; /* teal-500 */
+  --flow-accent-hover: #0d9488; /* teal-600 */
+  --flow-accent-soft: rgba(20, 184, 166, 0.14); /* teal-500 with opacity */
+  --flow-accent-border: rgba(20, 184, 166, 0.35); /* teal-500 border */
 
   --flow-sidebar-bg: #0b0f19;
   --flow-sidebar-border: #1e293b;
@@ -145,7 +145,7 @@
 }
 
 .flowspace-shell .flow-card:hover {
-  border-color: rgba(99, 102, 241, 0.35);
+  border-color: rgba(20, 184, 166, 0.35); /* teal border */
   box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.07);
 }
 
@@ -158,7 +158,7 @@
 .flowspace-shell.dark-theme .flow-card:hover,
 .flowspace-shell.dark .flow-card:hover,
 .dark .flowspace-shell .flow-card:hover {
-  border-color: rgba(99, 102, 241, 0.45);
+  border-color: rgba(20, 184, 166, 0.45); /* teal border hover */
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
 }
 
