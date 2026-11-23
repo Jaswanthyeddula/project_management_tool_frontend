@@ -49,8 +49,21 @@ export function AuthProvider({ children }) {
         } catch (error) {
             console.log(error);
         }
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
+        const keysToRemove = [
+            'token',
+            'refreshToken',
+            'user',
+            'flowspace_projects',
+            'flowspace_workspaces',
+            'flowspace_active_project_id',
+            'flowspace_project_workspaces'
+        ];
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('flowspace_tasks_') || key.startsWith('flowspace_boards_')) {
+                localStorage.removeItem(key);
+            }
+        });
         setUser(null);
     };
 
